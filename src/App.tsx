@@ -5,7 +5,7 @@ import { StartScreen } from "./components/StartScreen";
 import { GameControls } from "./components/GameControls";
 import { audio } from "./utils/audio";
 import { LEVELS } from "./utils/levels";
-import { Trophy, HelpCircle, Gamepad2, Volume2, VolumeX, Sparkles, AlertTriangle, RefreshCw } from "lucide-react";
+import { Trophy, HelpCircle, Gamepad2, Volume2, VolumeX, Sparkles, AlertTriangle, RefreshCw, Maximize2, Minimize2 } from "lucide-react";
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>(GameState.START_SCREEN);
@@ -15,6 +15,31 @@ export default function App() {
   const [progress, setProgress] = useState<number>(0);
   const [power, setPower] = useState<PowerState>(PowerState.NORMAL);
   const [score, setScore] = useState<number>(0);
+
+  // Fullscreen state with support for standard change events
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.warn("Fullscreen permission or support error:", err);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   // Device Selection Preference (PC or Mobile with virtual controls)
   const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() => {
@@ -111,41 +136,81 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#000000] text-white flex flex-col justify-between p-4 md:p-8 antialiased selection:bg-rose-500 selection:text-white relative overflow-hidden font-sans">
+    <div className={`min-h-screen w-full bg-[#000000] text-white flex flex-col justify-between ${isMobileDevice ? "p-1.5" : "p-4 md:p-8"} antialiased selection:bg-rose-500 selection:text-white relative overflow-hidden font-sans`}>
       {/* Immersive Atmospheric Space-Adventure Glow Background Layers */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#1e3a8a]/25 via-[#3b82f6]/10 to-[#60a5fa]/5 pointer-events-none z-0"></div>
       <div className="absolute top-24 left-12 w-48 h-48 bg-white/5 blur-[90px] rounded-full pointer-events-none z-0"></div>
       <div className="absolute top-[40%] right-12 w-80 h-80 bg-yellow-400/[0.03] blur-[120px] rounded-full pointer-events-none z-0"></div>
 
       {/* HEADER SECTION: HIGH-TECH IMMERSIVE HUD */}
-      <header className="relative z-10 w-full max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center bg-black/45 backdrop-blur-md p-6 px-10 rounded-3xl border border-white/10 gap-6 mb-6 select-none shadow-[2px_10px_30px_rgba(0,0,0,0.5)]">
-        <div className="space-y-1 text-center md:text-left">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Jogador</p>
-          <h1 className="text-3xl md:text-4xl font-black font-display tracking-tight text-white drop-shadow-lg leading-none">
-            SUPERMAYC <span className="text-yellow-400 font-mono tracking-tight font-black">{score.toString().padStart(6, "0")}</span>
+      <header className={`relative z-10 w-full max-w-6xl mx-auto flex ${isMobileDevice ? "flex-row justify-between p-3 px-4 rounded-2xl mb-2 gap-2 text-xs" : "flex-col md:flex-row justify-between p-6 px-10 rounded-3xl mb-6 gap-6"} items-center bg-black/45 backdrop-blur-md border border-white/10 select-none shadow-[2px_10px_30px_rgba(0,0,0,0.5)]`}>
+        <div className={`space-y-1 ${isMobileDevice ? "text-left flex items-center gap-2 space-y-0" : "text-center md:text-left"}`}>
+          {!isMobileDevice && <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Jogador</p>}
+          <h1 className={`${isMobileDevice ? "text-sm" : "text-3xl md:text-4xl"} font-black font-display tracking-tight text-white drop-shadow-lg leading-none`}>
+            {isMobileDevice ? "S.MAYC" : "SUPERMAYC"}{" "}
+            <span className="text-yellow-400 font-mono tracking-tight font-black">
+              {score.toString().padStart(isMobileDevice ? 5 : 6, "0")}
+            </span>
           </h1>
         </div>
 
         {/* Global Stats in top-right HUD styles */}
-        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14">
-          <div className="text-center font-display">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Moedas</p>
-            <div className="flex items-center justify-center gap-2 mt-1">
-              <div className="w-4 h-6 bg-yellow-400 rounded-full border-2 border-yellow-250 shadow-[0_0_15px_rgba(250,204,21,0.55)] animate-pulse"></div>
-              <p className="text-2xl md:text-3xl font-black italic tracking-tighter">× {coins.toString().padStart(2, "0")}</p>
+        <div className={`flex items-center justify-center ${isMobileDevice ? "gap-4 text-xs" : "flex-wrap gap-8 md:gap-14"}`}>
+          <div className="text-center font-display flex items-center gap-1">
+            {isMobileDevice ? (
+              <span className="text-yellow-400 font-bold">🪙 × {coins.toString().padStart(2, "0")}</span>
+            ) : (
+              <>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Moedas</p>
+                <div className="flex items-center justify-center gap-2 mt-1">
+                  <div className="w-4 h-6 bg-yellow-400 rounded-full border-2 border-yellow-250 shadow-[0_0_15px_rgba(250,204,21,0.55)] animate-pulse"></div>
+                  <p className="text-2xl md:text-3xl font-black italic tracking-tighter">× {coins.toString().padStart(2, "0")}</p>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <div className="text-center font-display flex items-center gap-1">
+            {isMobileDevice ? (
+              <span className="text-blue-300 font-bold font-mono">🗺️ {currentLevelId}</span>
+            ) : (
+              <>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Mundo</p>
+                <p className="text-2xl md:text-3xl font-black mt-1 italic tracking-tighter text-blue-300">1 - {currentLevelId}</p>
+              </>
+            )}
+          </div>
+
+          {!isMobileDevice && (
+            <div className="text-center font-display">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Recorde</p>
+              <div className="flex items-center gap-1.5 justify-center mt-1">
+                <Trophy className="w-5 h-5 text-amber-400 fill-amber-400 animate-pulse" />
+                <p className="text-2xl md:text-3xl font-black italic tracking-tighter text-emerald-400">{highScore.toLocaleString()}</p>
+              </div>
             </div>
-          </div>
-          <div className="text-center font-display">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Mundo</p>
-            <p className="text-2xl md:text-3xl font-black mt-1 italic tracking-tighter text-blue-300">1 - {currentLevelId}</p>
-          </div>
-          <div className="text-center font-display">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Recorde</p>
-            <div className="flex items-center gap-1.5 justify-center mt-1">
-              <Trophy className="w-5 h-5 text-amber-400 fill-amber-400 animate-pulse" />
-              <p className="text-2xl md:text-3xl font-black italic tracking-tighter text-emerald-400">{highScore.toLocaleString()}</p>
-            </div>
-          </div>
+          )}
+
+          {/* Fullscreen Toggle Button - Perfect visual addition */}
+          <button
+            onClick={toggleFullscreen}
+            className={`flex items-center gap-1.5 justify-center ${
+              isMobileDevice ? "p-1 px-2.5 bg-blue-500/15 text-blue-400 text-[10px]" : "p-2 px-3.5 bg-white/10 text-white text-xs"
+            } hover:bg-white/20 active:scale-95 transition-all rounded-lg border border-white/10 font-bold cursor-pointer font-sans`}
+            title="Alternar Tela Cheia"
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className={`${isMobileDevice ? "w-3 h-3" : "w-4 h-4"}`} />
+                <span>Janela</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className={`${isMobileDevice ? "w-3 h-3" : "w-4 h-4"}`} />
+                <span>Tela Cheia</span>
+              </>
+            )}
+          </button>
         </div>
       </header>
 
@@ -175,54 +240,56 @@ export default function App() {
             />
 
             {/* IMMERSIVE BOTTOM STATUS BAR */}
-            <div className="relative z-20 min-h-20 bg-black/75 backdrop-blur-md border-t border-white/10 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
-              <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-sm bg-red-950/40 shadow-[0_0_12px_rgba(239,68,68,0.2)]">
+            <div className={`relative z-20 ${isMobileDevice ? "p-2 px-4 gap-2 flex-row justify-between" : "min-h-20 p-6 py-4 gap-4 flex-col sm:flex-row"} bg-black/75 backdrop-blur-md border-t border-white/10 flex items-center justify-between select-none`}>
+              <div className={`flex items-center justify-center ${isMobileDevice ? "gap-3 text-xs w-full justify-start" : "flex-wrap gap-6 md:gap-10"}`}>
+                <div className="flex items-center gap-1.5">
+                  <span className={`${isMobileDevice ? "w-6 h-6 text-xs" : "w-9 h-9 text-sm"} rounded-full border border-white/20 flex items-center justify-center bg-red-950/40 shadow-[0_0_12px_rgba(239,68,68,0.2)]`}>
                     ❤️
                   </span>
                   <div className="text-left font-sans">
-                    <p className="opacity-50 text-[10px] uppercase tracking-widest text-blue-200 font-bold leading-none">Vidas</p>
-                    <p className="font-extrabold text-lg leading-snug font-display text-white">{lives.toString().padStart(2, "0")}</p>
+                    {!isMobileDevice && <p className="opacity-50 text-[10px] uppercase tracking-widest text-blue-200 font-bold leading-none">Vidas</p>}
+                    <p className={`font-extrabold ${isMobileDevice ? "text-xs" : "text-lg"} leading-none font-display text-white`}>{lives.toString().padStart(2, "0")}</p>
                   </div>
                 </div>
 
-                <div className="h-8 w-px bg-white/10 hidden sm:block"></div>
+                <div className={`h-6 w-px bg-white/10 ${isMobileDevice ? "block" : "hidden sm:block"}`}></div>
 
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-full border border-amber-400/30 flex items-center justify-center text-sm bg-yellow-500/10 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                <div className="flex items-center gap-1.5">
+                  <span className={`${isMobileDevice ? "w-6 h-6 text-xs" : "w-9 h-9 text-sm"} rounded-full border border-amber-400/30 flex items-center justify-center bg-yellow-500/10 shadow-[0_0_15px_rgba(245,158,11,0.15)]`}>
                     ⚡
                   </span>
                   <div className="text-left font-sans">
-                    <p className="opacity-50 text-[10px] uppercase tracking-widest text-blue-200 font-bold leading-none">Poder</p>
-                    <p className="font-extrabold text-lg leading-snug font-display text-yellow-400 uppercase tracking-tight">{power}</p>
+                    {!isMobileDevice && <p className="opacity-50 text-[10px] uppercase tracking-widest text-blue-200 font-bold leading-none">Poder</p>}
+                    <p className={`font-extrabold ${isMobileDevice ? "text-xs" : "text-lg"} leading-none font-display text-yellow-400 uppercase tracking-tight`}>{power}</p>
                   </div>
                 </div>
 
-                <div className="h-8 w-px bg-white/10 hidden sm:block"></div>
+                <div className={`h-6 w-px bg-white/10 ${isMobileDevice ? "block" : "hidden sm:block"}`}></div>
 
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-full border border-sky-400/30 flex items-center justify-center text-sm bg-sky-500/10">
+                <div className="flex items-center gap-1.5">
+                  <span className={`${isMobileDevice ? "w-6 h-6 text-xs" : "w-9 h-9 text-sm"} rounded-full border border-sky-400/30 flex items-center justify-center`}>
                     📍
                   </span>
                   <div className="text-left font-sans">
-                    <p className="opacity-50 text-[10px] uppercase tracking-widest text-blue-200 font-bold leading-none">Progresso</p>
-                    <p className="font-extrabold text-lg leading-snug font-display text-sky-400">{progress}%</p>
+                    {!isMobileDevice && <p className="opacity-50 text-[10px] uppercase tracking-widest text-blue-200 font-bold leading-none">Progresso</p>}
+                    <p className={`font-extrabold ${isMobileDevice ? "text-xs" : "text-lg"} leading-none font-display text-sky-400`}>{progress}%</p>
                   </div>
                 </div>
               </div>
 
               {/* Action buttons mirroring Pause (Esc) & Inventory (I) layout style */}
-              <div className="flex items-center gap-3 font-display">
+              <div className="flex items-center gap-2 font-display shrink-0">
                 <button
                   onClick={returnToMenu}
-                  className="px-6 py-2 bg-white text-black font-extrabold text-xs rounded-full tracking-wider uppercase shadow-[0_0_15px_rgba(255,255,255,0.45)] hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
+                  className={`${isMobileDevice ? "px-3 py-1.5 text-[10px]" : "px-6 py-2 text-xs"} bg-white text-black font-extrabold rounded-full tracking-wider uppercase shadow-[0_0_15px_rgba(255,255,255,0.45)] hover:bg-slate-100 active:scale-95 transition-all cursor-pointer`}
                 >
-                  SAIR (ESC)
+                  SAIR
                 </button>
-                <div className="px-6 py-2 border border-white/20 text-white font-extrabold text-xs rounded-full tracking-wider uppercase cursor-default select-none bg-white/5 font-mono">
-                  MUNDO {currentLevelId}-1
-                </div>
+                {!isMobileDevice && (
+                  <div className="px-6 py-2 border border-white/20 text-white font-extrabold text-xs rounded-full tracking-wider uppercase cursor-default select-none bg-white/5 font-mono">
+                    MUNDO {currentLevelId}-1
+                  </div>
+                )}
               </div>
             </div>
 
