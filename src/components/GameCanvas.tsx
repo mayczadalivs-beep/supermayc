@@ -25,6 +25,7 @@ interface GameCanvasProps {
   onVictory: (stats: { coins: number; score: number; lives: number; levelName: string }) => void;
   onGameOver: (stats: { coins: number; levelName: string }) => void;
   resetTrigger: number;
+  isMobileDevice?: boolean;
 }
 
 const TILE_SIZE = 32;
@@ -40,7 +41,8 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   onProgressChanged,
   onVictory,
   onGameOver,
-  resetTrigger
+  resetTrigger,
+  isMobileDevice
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -1836,13 +1838,20 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       )}
 
       {/* CANVAS VIEWPORT */}
-      <div className="relative w-full h-full flex justify-center items-center bg-sky-300">
+      <div className="relative w-full h-full flex justify-center items-center bg-sky-300 overflow-hidden">
         <canvas
           ref={canvasRef}
           width={VIEWPORT_WIDTH}
           height={VIEWPORT_HEIGHT}
           className="max-w-full block shadow-2xl brightness-105"
-          style={{ width: "100%", height: "100%", imageRendering: "pixelated" }}
+          style={{
+            width: "100%",
+            height: "auto",
+            aspectRatio: "1200 / 480",
+            maxHeight: "100%",
+            objectFit: "contain",
+            imageRendering: "pixelated"
+          }}
         />
       </div>
 

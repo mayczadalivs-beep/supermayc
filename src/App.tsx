@@ -81,6 +81,12 @@ export default function App() {
 
   // Handle beginning of a level
   const handleStartGame = (levelId: number) => {
+    // Attempt auto-fullscreen on start for mobile devices
+    if (isMobileDevice && !document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.warn("Auto-fullscreen failed or blocked by sandbox:", err);
+      });
+    }
     setCurrentLevelId(levelId);
     setCoins(0);
     setLives(3);
@@ -143,76 +149,78 @@ export default function App() {
       <div className="absolute top-[40%] right-12 w-80 h-80 bg-yellow-400/[0.03] blur-[120px] rounded-full pointer-events-none z-0"></div>
 
       {/* HEADER SECTION: HIGH-TECH IMMERSIVE HUD */}
-      <header className={`relative z-10 w-full max-w-6xl mx-auto flex ${isMobileDevice ? "flex-row justify-between p-3 px-4 rounded-2xl mb-2 gap-2 text-xs" : "flex-col md:flex-row justify-between p-6 px-10 rounded-3xl mb-6 gap-6"} items-center bg-black/45 backdrop-blur-md border border-white/10 select-none shadow-[2px_10px_30px_rgba(0,0,0,0.5)]`}>
-        <div className={`space-y-1 ${isMobileDevice ? "text-left flex items-center gap-2 space-y-0" : "text-center md:text-left"}`}>
-          {!isMobileDevice && <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Jogador</p>}
-          <h1 className={`${isMobileDevice ? "text-sm" : "text-3xl md:text-4xl"} font-black font-display tracking-tight text-white drop-shadow-lg leading-none`}>
-            {isMobileDevice ? "S.MAYC" : "SUPERMAYC"}{" "}
-            <span className="text-yellow-400 font-mono tracking-tight font-black">
-              {score.toString().padStart(isMobileDevice ? 5 : 6, "0")}
-            </span>
-          </h1>
-        </div>
-
-        {/* Global Stats in top-right HUD styles */}
-        <div className={`flex items-center justify-center ${isMobileDevice ? "gap-4 text-xs" : "flex-wrap gap-8 md:gap-14"}`}>
-          <div className="text-center font-display flex items-center gap-1">
-            {isMobileDevice ? (
-              <span className="text-yellow-400 font-bold">🪙 × {coins.toString().padStart(2, "0")}</span>
-            ) : (
-              <>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Moedas</p>
-                <div className="flex items-center justify-center gap-2 mt-1">
-                  <div className="w-4 h-6 bg-yellow-400 rounded-full border-2 border-yellow-250 shadow-[0_0_15px_rgba(250,204,21,0.55)] animate-pulse"></div>
-                  <p className="text-2xl md:text-3xl font-black italic tracking-tighter">× {coins.toString().padStart(2, "0")}</p>
-                </div>
-              </>
-            )}
-          </div>
-          
-          <div className="text-center font-display flex items-center gap-1">
-            {isMobileDevice ? (
-              <span className="text-blue-300 font-bold font-mono">🗺️ {currentLevelId}</span>
-            ) : (
-              <>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Mundo</p>
-                <p className="text-2xl md:text-3xl font-black mt-1 italic tracking-tighter text-blue-300">1 - {currentLevelId}</p>
-              </>
-            )}
+      {(!isMobileDevice || gameState === GameState.START_SCREEN) && (
+        <header className={`relative z-10 w-full max-w-6xl mx-auto flex ${isMobileDevice ? "flex-row justify-between p-3 px-4 rounded-2xl mb-2 gap-2 text-xs" : "flex-col md:flex-row justify-between p-6 px-10 rounded-3xl mb-6 gap-6"} items-center bg-black/45 backdrop-blur-md border border-white/10 select-none shadow-[2px_10px_30px_rgba(0,0,0,0.5)]`}>
+          <div className={`space-y-1 ${isMobileDevice ? "text-left flex items-center gap-2 space-y-0" : "text-center md:text-left"}`}>
+            {!isMobileDevice && <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Jogador</p>}
+            <h1 className={`${isMobileDevice ? "text-sm" : "text-3xl md:text-4xl"} font-black font-display tracking-tight text-white drop-shadow-lg leading-none`}>
+              {isMobileDevice ? "S.MAYC" : "SUPERMAYC"}{" "}
+              <span className="text-yellow-400 font-mono tracking-tight font-black">
+                {score.toString().padStart(isMobileDevice ? 5 : 6, "0")}
+              </span>
+            </h1>
           </div>
 
-          {!isMobileDevice && (
-            <div className="text-center font-display">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Recorde</p>
-              <div className="flex items-center gap-1.5 justify-center mt-1">
-                <Trophy className="w-5 h-5 text-amber-400 fill-amber-400 animate-pulse" />
-                <p className="text-2xl md:text-3xl font-black italic tracking-tighter text-emerald-400">{highScore.toLocaleString()}</p>
-              </div>
+          {/* Global Stats in top-right HUD styles */}
+          <div className={`flex items-center justify-center ${isMobileDevice ? "gap-4 text-xs" : "flex-wrap gap-8 md:gap-14"}`}>
+            <div className="text-center font-display flex items-center gap-1">
+              {isMobileDevice ? (
+                <span className="text-yellow-400 font-bold">🪙 × {coins.toString().padStart(2, "0")}</span>
+              ) : (
+                <>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Moedas</p>
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                    <div className="w-4 h-6 bg-yellow-400 rounded-full border-2 border-yellow-250 shadow-[0_0_15px_rgba(250,204,21,0.55)] animate-pulse"></div>
+                    <p className="text-2xl md:text-3xl font-black italic tracking-tighter">× {coins.toString().padStart(2, "0")}</p>
+                  </div>
+                </>
+              )}
             </div>
-          )}
+            
+            <div className="text-center font-display flex items-center gap-1">
+              {isMobileDevice ? (
+                <span className="text-blue-300 font-bold font-mono">🗺️ {currentLevelId}</span>
+              ) : (
+                <>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Mundo</p>
+                  <p className="text-2xl md:text-3xl font-black mt-1 italic tracking-tighter text-blue-300">1 - {currentLevelId}</p>
+                </>
+              )}
+            </div>
 
-          {/* Fullscreen Toggle Button - Perfect visual addition */}
-          <button
-            onClick={toggleFullscreen}
-            className={`flex items-center gap-1.5 justify-center ${
-              isMobileDevice ? "p-1 px-2.5 bg-blue-500/15 text-blue-400 text-[10px]" : "p-2 px-3.5 bg-white/10 text-white text-xs"
-            } hover:bg-white/20 active:scale-95 transition-all rounded-lg border border-white/10 font-bold cursor-pointer font-sans`}
-            title="Alternar Tela Cheia"
-          >
-            {isFullscreen ? (
-              <>
-                <Minimize2 className={`${isMobileDevice ? "w-3 h-3" : "w-4 h-4"}`} />
-                <span>Janela</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className={`${isMobileDevice ? "w-3 h-3" : "w-4 h-4"}`} />
-                <span>Tela Cheia</span>
-              </>
+            {!isMobileDevice && (
+              <div className="text-center font-display">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Recorde</p>
+                <div className="flex items-center gap-1.5 justify-center mt-1">
+                  <Trophy className="w-5 h-5 text-amber-400 fill-amber-400 animate-pulse" />
+                  <p className="text-2xl md:text-3xl font-black italic tracking-tighter text-emerald-400">{highScore.toLocaleString()}</p>
+                </div>
+              </div>
             )}
-          </button>
-        </div>
-      </header>
+
+            {/* Fullscreen Toggle Button - Perfect visual addition */}
+            <button
+              onClick={toggleFullscreen}
+              className={`flex items-center gap-1.5 justify-center ${
+                isMobileDevice ? "p-1 px-2.5 bg-blue-500/15 text-blue-400 text-[10px]" : "p-2 px-3.5 bg-white/10 text-white text-xs"
+              } hover:bg-white/20 active:scale-95 transition-all rounded-lg border border-white/10 font-bold cursor-pointer font-sans`}
+              title="Alternar Tela Cheia"
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className={`${isMobileDevice ? "w-3 h-3" : "w-4 h-4"}`} />
+                  <span>Janela</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className={`${isMobileDevice ? "w-3 h-3" : "w-4 h-4"}`} />
+                  <span>Tela Cheia</span>
+                </>
+              )}
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* CORE DISPLAY GAMEPORT VIEWPORTS */}
       <main className="relative z-10 w-full max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center">
@@ -224,7 +232,11 @@ export default function App() {
             setIsMobileDevice={setIsMobileDevice}
           />
         ) : (
-          <div className="w-full bg-[#000000] rounded-3xl border-4 md:border-8 border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden ring-1 ring-white/10 animate-fade-in">
+          <div className={`w-full bg-[#000000] ${
+            isMobileDevice 
+              ? (isFullscreen ? "rounded-none border-0" : "rounded-2xl border-2") 
+              : "rounded-3xl border-4 md:border-8"
+          } border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden ring-1 ring-white/10 animate-fade-in`}>
             
             {/* RENDER CANVAS CONTAINER */}
             <GameCanvas
@@ -237,6 +249,7 @@ export default function App() {
               onVictory={handleLevelCompletedTrigger}
               onGameOver={handleGameOverTrigger}
               resetTrigger={resetTrigger}
+              isMobileDevice={isMobileDevice}
             />
 
             {/* IMMERSIVE BOTTOM STATUS BAR */}
@@ -275,6 +288,20 @@ export default function App() {
                     <p className={`font-extrabold ${isMobileDevice ? "text-xs" : "text-lg"} leading-none font-display text-sky-400`}>{progress}%</p>
                   </div>
                 </div>
+
+                {isMobileDevice && (
+                  <>
+                    <div className="h-6 w-px bg-white/10"></div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-6 h-6 rounded-full border border-yellow-400/30 flex items-center justify-center text-[11px] bg-yellow-500/15 shadow-[0_0_10px_rgba(250,204,21,0.3)]">
+                        🪙
+                      </span>
+                      <div className="text-left font-sans">
+                        <p className="font-extrabold text-xs leading-none font-display text-yellow-400">×{coins.toString().padStart(2, "0")}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Action buttons mirroring Pause (Esc) & Inventory (I) layout style */}

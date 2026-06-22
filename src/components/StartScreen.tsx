@@ -20,6 +20,16 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   const triggerStart = () => {
     // Resume context & start arpeggiated music!
     audio.startMusic(LEVELS.find((l) => l.id === selectedLevelId)?.theme || "grass");
+    
+    // Request fullscreen on mobile as direct response to click
+    if (isMobileDevice) {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.warn("Fullscreen request failed inside click handler:", err);
+        });
+      }
+    }
+    
     onStartGame(selectedLevelId);
   };
 
