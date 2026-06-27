@@ -5,7 +5,7 @@ import { StartScreen } from "./components/StartScreen";
 import { GameControls } from "./components/GameControls";
 import { audio } from "./utils/audio";
 import { LEVELS } from "./utils/levels";
-import { Trophy, HelpCircle, Gamepad2, Volume2, VolumeX, Sparkles, AlertTriangle, RefreshCw, Maximize2, Minimize2 } from "lucide-react";
+import { Trophy, HelpCircle, Gamepad2, Volume2, VolumeX, Sparkles, AlertTriangle, RefreshCw, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>(GameState.START_SCREEN);
@@ -74,6 +74,16 @@ export default function App() {
 
   // Trigger re-creation of level
   const [resetTrigger, setResetTrigger] = useState<number>(0);
+  const [isMuted, setIsMuted] = useState<boolean>(() => audio.getMutedState());
+
+  const handleToggleMute = () => {
+    const nextMuted = audio.toggleMute();
+    setIsMuted(nextMuted);
+  };
+
+  const handleLevelRestart = () => {
+    setResetTrigger((prev) => prev + 1);
+  };
 
   // Sync highscore to local storage
   useEffect(() => {
@@ -155,7 +165,7 @@ export default function App() {
       <div className="absolute top-[40%] right-12 w-80 h-80 bg-yellow-400/[0.03] blur-[120px] rounded-full pointer-events-none z-0"></div>
 
       {/* HEADER SECTION: HIGH-TECH IMMERSIVE HUD */}
-      {(!isMobileDevice || gameState === GameState.START_SCREEN) && (
+      {gameState === GameState.START_SCREEN && (
         <header className={`relative z-10 w-full max-w-6xl mx-auto flex ${isMobileDevice ? "flex-row justify-between p-3 px-4 rounded-2xl mb-2 gap-2 text-xs" : "flex-col md:flex-row justify-between p-6 px-10 rounded-3xl mb-6 gap-6"} items-center bg-black/45 backdrop-blur-md border border-white/10 select-none shadow-[2px_10px_30px_rgba(0,0,0,0.5)]`}>
           <div className={`space-y-1 ${isMobileDevice ? "text-left flex items-center gap-2 space-y-0" : "text-center md:text-left"}`}>
             {!isMobileDevice && <p className="text-[10px] uppercase tracking-[0.3em] text-blue-200 font-bold opacity-75">Jogador</p>}
@@ -238,205 +248,225 @@ export default function App() {
             setIsMobileDevice={setIsMobileDevice}
           />
         ) : (
-          <div className={`w-full bg-[#000000] ${
+          <div className={
             isMobileDevice 
-              ? (isFullscreen ? "rounded-none border-0" : "rounded-2xl border-2") 
-              : "rounded-3xl border-4 md:border-8"
-          } border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative flex flex-col overflow-hidden ring-1 ring-white/10 animate-fade-in`}>
+              ? "simulate-mobile-landscape flex flex-col justify-center items-center overflow-hidden bg-[#0a0f1d] relative" 
+              : "fixed inset-0 z-40 bg-[#0a0f1d] flex flex-col justify-center items-center overflow-hidden w-screen h-screen animate-fade-in"
+          }>
             
-            {/* RENDER CANVAS CONTAINER */}
-            <GameCanvas
-              currentLevelId={currentLevelId}
-              gameState={gameState}
-              onCoinCollected={handleCoinCalculated}
-              onLivesChanged={setLives}
-              onPowerChanged={setPower}
-              onProgressChanged={setProgress}
-              onVictory={handleLevelCompletedTrigger}
-              onGameOver={handleGameOverTrigger}
-              resetTrigger={resetTrigger}
-              isMobileDevice={isMobileDevice}
-            />
-
-            {/* IMMERSIVE BOTTOM STATUS BAR */}
-            <div className={`relative z-20 ${isMobileDevice ? "p-2 px-4 gap-2 flex-row justify-between" : "min-h-20 p-6 py-4 gap-4 flex-col sm:flex-row"} bg-black/75 backdrop-blur-md border-t border-white/10 flex items-center justify-between select-none`}>
-              <div className={`flex items-center justify-center ${isMobileDevice ? "gap-3 text-xs w-full justify-start" : "flex-wrap gap-6 md:gap-10"}`}>
-                <div className="flex items-center gap-1.5">
-                  <span className={`${isMobileDevice ? "w-6 h-6 text-xs" : "w-9 h-9 text-sm"} rounded-full border border-white/20 flex items-center justify-center bg-red-950/40 shadow-[0_0_12px_rgba(239,68,68,0.2)]`}>
-                    ❤️
-                  </span>
-                  <div className="text-left font-sans">
-                    {!isMobileDevice && <p className="opacity-50 text-[10px] uppercase tracking-widest text-blue-200 font-bold leading-none">Vidas</p>}
-                    <p className={`font-extrabold ${isMobileDevice ? "text-xs" : "text-lg"} leading-none font-display text-white`}>{lives.toString().padStart(2, "0")}</p>
-                  </div>
-                </div>
-
-                <div className={`h-6 w-px bg-white/10 ${isMobileDevice ? "block" : "hidden sm:block"}`}></div>
-
-                <div className="flex items-center gap-1.5">
-                  <span className={`${isMobileDevice ? "w-6 h-6 text-xs" : "w-9 h-9 text-sm"} rounded-full border border-amber-400/30 flex items-center justify-center bg-yellow-500/10 shadow-[0_0_15px_rgba(245,158,11,0.15)]`}>
-                    ⚡
-                  </span>
-                  <div className="text-left font-sans">
-                    {!isMobileDevice && <p className="opacity-50 text-[10px] uppercase tracking-widest text-blue-200 font-bold leading-none">Poder</p>}
-                    <p className={`font-extrabold ${isMobileDevice ? "text-xs" : "text-lg"} leading-none font-display text-yellow-400 uppercase tracking-tight`}>{power}</p>
-                  </div>
-                </div>
-
-                <div className={`h-6 w-px bg-white/10 ${isMobileDevice ? "block" : "hidden sm:block"}`}></div>
-
-                <div className="flex items-center gap-1.5">
-                  <span className={`${isMobileDevice ? "w-6 h-6 text-xs" : "w-9 h-9 text-sm"} rounded-full border border-sky-400/30 flex items-center justify-center`}>
-                    📍
-                  </span>
-                  <div className="text-left font-sans">
-                    {!isMobileDevice && <p className="opacity-50 text-[10px] uppercase tracking-widest text-blue-200 font-bold leading-none">Progresso</p>}
-                    <p className={`font-extrabold ${isMobileDevice ? "text-xs" : "text-lg"} leading-none font-display text-sky-400`}>{progress}%</p>
-                  </div>
-                </div>
-
-                {isMobileDevice && (
+            {/* RETRO ARCADE HUD OVERLAY (PC & MOBILE) */}
+            <div className={`absolute top-4 left-4 right-4 z-30 flex justify-between items-center pointer-events-none select-none ${isMobileDevice ? "px-2" : "px-6"}`}>
+              {/* Left Group: World, Lives & Progress */}
+              <div className="flex items-center gap-3 bg-black/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-xs font-bold text-white shadow-2xl">
+                <span className="text-sky-400 font-mono tracking-wider">🗺️ 1-{currentLevelId}</span>
+                <span className="text-white/20">|</span>
+                <span className="text-rose-500 flex items-center gap-1">
+                  ❤️ <span className="font-mono text-sm font-extrabold">{lives}</span>
+                </span>
+                {!isMobileDevice && (
                   <>
-                    <div className="h-6 w-px bg-white/10"></div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-6 h-6 rounded-full border border-yellow-400/30 flex items-center justify-center text-[11px] bg-yellow-500/15 shadow-[0_0_10px_rgba(250,204,21,0.3)]">
-                        🪙
-                      </span>
-                      <div className="text-left font-sans">
-                        <p className="font-extrabold text-xs leading-none font-display text-yellow-400">×{coins.toString().padStart(2, "0")}</p>
-                      </div>
-                    </div>
+                    <span className="text-white/20">|</span>
+                    <span className="text-sky-400 flex items-center gap-1">
+                      📍 <span className="font-mono text-sm font-extrabold">{progress}%</span>
+                    </span>
                   </>
                 )}
               </div>
-
-              {/* Action buttons mirroring Pause (Esc) & Inventory (I) layout style */}
-              <div className="flex items-center gap-2 font-display shrink-0">
-                <button
-                  onClick={returnToMenu}
-                  className={`${isMobileDevice ? "px-3 py-1.5 text-[10px]" : "px-6 py-2 text-xs"} bg-white text-black font-extrabold rounded-full tracking-wider uppercase shadow-[0_0_15px_rgba(255,255,255,0.45)] hover:bg-slate-100 active:scale-95 transition-all cursor-pointer`}
-                >
-                  SAIR
-                </button>
-                {!isMobileDevice && (
-                  <div className="px-6 py-2 border border-white/20 text-white font-extrabold text-xs rounded-full tracking-wider uppercase cursor-default select-none bg-white/5 font-mono">
-                    MUNDO {currentLevelId}-1
-                  </div>
-                )}
+              
+              {/* Center Group: Score (Styled retro Mario) */}
+              <div className="bg-black/80 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 text-sm font-black font-mono text-yellow-400 tracking-widest shadow-2xl flex items-center gap-2">
+                <span>MARIO</span>
+                <span>{score.toString().padStart(6, "0")}</span>
               </div>
+
+              {/* Right Group: Coins, Power, Controls */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3 bg-black/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-xs font-bold text-white shadow-2xl mr-1">
+                  <span className="text-amber-400 flex items-center gap-1">
+                    🪙 <span className="font-mono text-sm font-extrabold">{coins.toString().padStart(2, "0")}</span>
+                  </span>
+                  <span className="text-white/20">|</span>
+                  <span className="text-emerald-400 font-mono text-[10px] font-black uppercase tracking-wider">{power}</span>
+                </div>
+
+                {/* PC/Mobile Interactive Controls */}
+                <div className="flex items-center gap-1.5 pointer-events-auto">
+                  {/* Mute Control */}
+                  <button
+                    onClick={handleToggleMute}
+                    className="p-1.5 bg-black/80 hover:bg-slate-800 active:scale-90 border border-white/10 rounded-full text-white shadow-2xl cursor-pointer transition-all flex items-center justify-center w-8 h-8"
+                    title="Música On/Off"
+                  >
+                    {isMuted ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
+                  </button>
+
+                  {/* Restart Control */}
+                  <button
+                    onClick={handleLevelRestart}
+                    className="p-1.5 bg-black/80 hover:bg-slate-800 active:scale-90 border border-white/10 rounded-full text-white shadow-2xl cursor-pointer transition-all flex items-center justify-center w-8 h-8"
+                    title="Reiniciar Fase"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-sky-400" />
+                  </button>
+
+                  {/* Sair Control */}
+                  <button
+                    onClick={returnToMenu}
+                    className="bg-red-600 hover:bg-red-500 active:scale-95 border border-red-500/30 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase text-white tracking-wider shadow-2xl cursor-pointer transition-all h-8 flex items-center justify-center"
+                  >
+                    SAIR
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* RENDER CANVAS CONTAINER */}
+            <div className="relative w-full h-full flex flex-col justify-center items-center bg-[#0a0f1d]">
+              <GameCanvas
+                currentLevelId={currentLevelId}
+                gameState={gameState}
+                onCoinCollected={handleCoinCalculated}
+                onLivesChanged={setLives}
+                onPowerChanged={setPower}
+                onProgressChanged={setProgress}
+                onVictory={handleLevelCompletedTrigger}
+                onGameOver={handleGameOverTrigger}
+                resetTrigger={resetTrigger}
+                isMobileDevice={isMobileDevice}
+              />
             </div>
 
             {/* MOBILE TOUCH INTERACTIVE CONTROL SCREEN OVERLAY */}
             {isMobileDevice && <GameControls />}
+
+            {/* --- LITE-MODAL A: VICTORY SUCCESS OVERLAY --- */}
+            {gameState === GameState.VICTORY && victoryStats && (
+              <div className="absolute inset-0 bg-slate-950/90 z-55 flex items-center justify-center p-2 backdrop-blur-xs animate-fade-in">
+                <div className={`bg-linear-to-b from-indigo-900 to-indigo-950 border-4 border-amber-400 rounded-3xl text-center shadow-2xl relative flex flex-col items-center ${
+                  isMobileDevice ? "p-4 py-3 max-w-sm w-11/12" : "p-8 max-w-md w-full"
+                }`}>
+                  {/* Sparkle icon */}
+                  <div className={`absolute bg-amber-400 rounded-full border-4 border-indigo-900 shadow-lg ${
+                    isMobileDevice ? "-top-8 p-2" : "-top-12 p-4"
+                  }`}>
+                    <Sparkles className={`${isMobileDevice ? "w-6 h-6" : "w-10 h-10"} text-slate-950 animate-spin`} />
+                  </div>
+
+                  <h1 className={`font-black text-amber-400 font-sans uppercase tracking-tight ${
+                    isMobileDevice ? "text-xl mt-3 mb-1" : "text-3xl mt-6 mb-2"
+                  }`}>
+                    🎉 Vitória Régia!
+                  </h1>
+                  <p className={`text-slate-300 font-bold font-mono ${
+                    isMobileDevice ? "text-[11px] mb-2" : "text-sm mb-6"
+                  }`}>
+                    Você conquistou o {victoryStats.levelName}!
+                  </p>
+
+                  {/* Custom Score logs */}
+                  <div className={`w-full bg-slate-950/80 rounded-2xl font-mono text-xs flex flex-col text-slate-300 border border-indigo-800 ${
+                    isMobileDevice ? "p-2.5 gap-1.5 mb-4 text-[10px]" : "p-4 gap-3 mb-8"
+                  }`}>
+                    <div className="flex justify-between border-b border-indigo-950 pb-1">
+                       <span>Moedas Coletadas:</span>
+                       <span className="text-amber-400 font-bold">{victoryStats.coins} 🪙</span>
+                    </div>
+                    <div className="flex justify-between border-b border-indigo-950 pb-1">
+                       <span>Vidas Restantes:</span>
+                       <span className="text-rose-400 font-bold">{victoryStats.lives} ❤️</span>
+                    </div>
+                    <div className="flex justify-between">
+                       <span>Pontuação Total:</span>
+                       <span className="text-white font-black">{score.toLocaleString()} PTS</span>
+                    </div>
+                  </div>
+
+                  {/* Modal Buttons panel */}
+                  <div className={`flex w-full ${isMobileDevice ? "flex-row gap-2" : "flex-col gap-3"}`}>
+                    <button
+                      onClick={handleRetrySameLevel}
+                      className="flex-1 py-2 bg-amber-400 hover:bg-amber-300 active:scale-98 transition-all rounded-xl text-slate-950 font-black cursor-pointer shadow-lg text-xs"
+                    >
+                      {currentLevelId < 3 ? "PRÓXIMO ►" : "JOGAR NOVAMENTE"}
+                    </button>
+                    <button
+                      onClick={returnToMenu}
+                      className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 active:scale-98 transition-all rounded-xl text-slate-300 font-bold cursor-pointer text-xs"
+                    >
+                      VOLTAR AO MENU
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* --- LITE-MODAL B: GAME OVER DEFEAT OVERLAY --- */}
+            {gameState === GameState.GAME_OVER && gameOverStats && (
+              <div className="absolute inset-0 bg-slate-950/90 z-55 flex items-center justify-center p-2 backdrop-blur-xs animate-fade-in">
+                <div className={`bg-linear-to-b from-rose-950 to-slate-950 border-4 border-red-600 rounded-3xl text-center shadow-2xl relative flex flex-col items-center ${
+                  isMobileDevice ? "p-4 py-3 max-w-sm w-11/12" : "p-8 max-w-md w-full"
+                }`}>
+                  {/* Warning icon */}
+                  <div className={`absolute bg-red-600 rounded-full border-4 border-rose-950 shadow-lg ${
+                    isMobileDevice ? "-top-8 p-2" : "-top-12 p-4"
+                  }`}>
+                    <AlertTriangle className={`${isMobileDevice ? "w-6 h-6 animate-pulse" : "w-10 h-10 animate-pulse"} text-white`} />
+                  </div>
+
+                  <h1 className={`font-black text-red-500 font-sans uppercase tracking-tight ${
+                    isMobileDevice ? "text-xl mt-3 mb-1" : "text-3xl mt-6 mb-2"
+                  }`}>
+                    💀 GAME OVER
+                  </h1>
+                  <p className={`text-slate-300 font-bold font-mono ${
+                    isMobileDevice ? "text-[11px] mb-2" : "text-sm mb-6"
+                  }`}>
+                    Infelizmente suas vidas se esgotaram...
+                  </p>
+
+                  {/* Custom Defeat Score logs */}
+                  <div className={`w-full bg-slate-950/80 rounded-2xl font-mono text-xs flex flex-col text-slate-300 border border-red-950 ${
+                    isMobileDevice ? "p-2.5 gap-1.5 mb-4 text-[10px]" : "p-4 gap-2 mb-8"
+                  }`}>
+                    <div className="flex justify-between">
+                      <span>Parou no Mundo:</span>
+                      <span className="text-cyan-400 font-bold">{gameOverStats.levelName}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-red-950 pt-1.5">
+                      <span>Moedas salvas:</span>
+                      <span className="text-amber-400 font-bold">{gameOverStats.coins} 🪙</span>
+                    </div>
+                  </div>
+
+                  {/* Defeat retry panel */}
+                  <div className={`flex w-full ${isMobileDevice ? "flex-row gap-2" : "flex-col gap-3"}`}>
+                    <button
+                      onClick={handleRetrySameLevel}
+                      className="flex-1 py-2 bg-red-600 hover:bg-red-500 active:scale-98 transition-all rounded-xl text-white font-black cursor-pointer shadow-lg flex items-center justify-center gap-1 text-xs"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      REENTRAR
+                    </button>
+                    <button
+                      onClick={returnToMenu}
+                      className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 active:scale-98 transition-all rounded-xl text-slate-300 font-bold cursor-pointer text-xs"
+                    >
+                      VOLTAR AO MENU
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
 
       {/* FOOTER MANIFEST RULES AND CREDIT RAIL */}
-      <footer className="relative z-10 w-full text-center py-6 text-[11px] font-mono text-slate-500 mt-6 select-none border-t border-white/5">
-        <p>SUPERMAYC Platforms Inc - 100% Melhorado e Inspirado pelo Clássico Super Mario Bros.</p>
-        <p className="mt-1 opacity-75">Sabor Imersivo | TypeScript, Web Audio real-time Synthesizer & Canvas Engine de Alta Performance</p>
-      </footer>
-
-      {/* --- LITE-MODAL A: VICTORY SUCCESS OVERLAY --- */}
-      {gameState === GameState.VICTORY && victoryStats && (
-        <div className="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-fade-in">
-          <div className="bg-linear-to-b from-indigo-900 to-indigo-950 border-4 border-amber-400 p-8 rounded-3xl w-full max-w-md text-center shadow-2xl relative flex flex-col items-center">
-            
-            {/* Sparkle icons */}
-            <div className="absolute -top-12 bg-amber-400 p-4 rounded-full border-4 border-indigo-900 shadow-lg">
-              <Sparkles className="w-10 h-10 text-slate-950 animate-spin" />
-            </div>
-
-            <h1 className="text-3xl font-black text-amber-400 font-sans uppercase mt-6 mb-2 tracking-tight">
-              🎉 Vitória Régia!
-            </h1>
-            <p className="text-slate-300 font-bold mb-6 font-mono text-sm">
-              Você conquistou o {victoryStats.levelName}!
-            </p>
-
-            {/* Custom Score logs */}
-            <div className="w-full bg-slate-950/80 rounded-2xl p-4 font-mono text-xs flex flex-col gap-3 text-slate-300 mb-8 border border-indigo-800">
-              <div className="flex justify-between border-b border-indigo-950 pb-2">
-                <span>Moedas Coletadas:</span>
-                <span className="text-amber-400 font-bold">{victoryStats.coins} 🪙</span>
-              </div>
-              <div className="flex justify-between border-b border-indigo-950 pb-2">
-                <span>Vidas Restantes:</span>
-                <span className="text-rose-400 font-bold">{victoryStats.lives} ❤️</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Pontuação Total:</span>
-                <span className="text-white font-black text-sm">{score.toLocaleString()} PTS</span>
-              </div>
-            </div>
-
-            {/* Modal Buttons panel */}
-            <div className="flex flex-col gap-3 w-full">
-              <button
-                onClick={handleRetrySameLevel}
-                className="w-full py-3 bg-amber-400 hover:bg-amber-300 active:scale-98 transition-all rounded-xl text-slate-950 font-black cursor-pointer shadow-lg shadow-amber-400/20"
-              >
-                {currentLevelId < 3 ? "PRÓXIMO MUNDO ►" : "JOGAR NOVAMENTE ↻"}
-              </button>
-              <button
-                onClick={returnToMenu}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 active:scale-98 transition-all rounded-xl text-slate-300 font-bold cursor-pointer"
-              >
-                MENU PRINCIPAL
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- LITE-MODAL B: GAME OVER DEFEAT OVERLAY --- */}
-      {gameState === GameState.GAME_OVER && gameOverStats && (
-        <div className="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-fade-in">
-          <div className="bg-linear-to-b from-rose-950 to-slate-950 border-4 border-red-600 p-8 rounded-3xl w-full max-w-md text-center shadow-2xl relative flex flex-col items-center">
-            
-            {/* Warning icon */}
-            <div className="absolute -top-12 bg-red-600 p-4 rounded-full border-4 border-rose-950 shadow-lg">
-              <AlertTriangle className="w-10 h-10 text-white animate-pulse" />
-            </div>
-
-            <h1 className="text-3xl font-black text-red-500 font-sans uppercase mt-6 mb-2 tracking-tight">
-              💀 GAME OVER
-            </h1>
-            <p className="text-slate-300 font-bold mb-6 font-mono text-sm">
-              Infelizmente suas vidas se esgotaram...
-            </p>
-
-            {/* Custom Defeat Score logs */}
-            <div className="w-full bg-slate-950/80 rounded-2xl p-4 font-mono text-xs flex flex-col gap-2 text-slate-300 mb-8 border border-red-950">
-              <div className="flex justify-between">
-                <span>Parou no Mundo:</span>
-                <span className="text-cyan-400 font-bold">{gameOverStats.levelName}</span>
-              </div>
-              <div className="flex justify-between border-t border-red-950 pt-2">
-                <span>Moedas salvas:</span>
-                <span className="text-amber-400 font-bold">{gameOverStats.coins} 🪙</span>
-              </div>
-            </div>
-
-            {/* Defeat retry panel */}
-            <div className="flex flex-col gap-3 w-full">
-              <button
-                onClick={handleRetrySameLevel}
-                className="w-full py-3 bg-red-600 hover:bg-red-500 active:scale-98 transition-all rounded-xl text-white font-black cursor-pointer shadow-lg shadow-red-600/30 flex items-center justify-center gap-1.5"
-              >
-                <RefreshCw className="w-4 h-4" />
-                REENTRAR NA FASE
-              </button>
-              <button
-                onClick={returnToMenu}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 active:scale-98 transition-all rounded-xl text-slate-300 font-bold cursor-pointer"
-              >
-                VOLTAR AO MENU
-              </button>
-            </div>
-          </div>
-        </div>
+      {gameState === GameState.START_SCREEN && (
+        <footer className="relative z-10 w-full text-center py-6 text-[11px] font-mono text-slate-500 mt-6 select-none border-t border-white/5">
+          <p>SUPERMAYC Platforms Inc - 100% Melhorado e Inspirado pelo Clássico Super Mario Bros.</p>
+          <p className="mt-1 opacity-75">Sabor Imersivo | TypeScript, Web Audio real-time Synthesizer & Canvas Engine de Alta Performance</p>
+        </footer>
       )}
     </div>
   );

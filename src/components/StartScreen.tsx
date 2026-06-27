@@ -10,12 +10,24 @@ interface StartScreenProps {
   setIsMobileDevice: (isMobile: boolean) => void;
 }
 
+const MOTIVATIONAL_PHRASES = [
+  "Never Say Never! Você consegue passar todas as fases! 🎤✨",
+  "Believe em você mesmo! Se cair no buraco, levante e tente de novo! 🔥",
+  "Não desista! Se eu cheguei ao topo da música, você zera esse jogo! 🚀🎵",
+  "Baby, baby, baby, oh! Foca no tempo de pulo e derrota o chefão! 🌟",
+  "Forte, focado e cheio de estilo. Bora salvar esse reino! 👑💪"
+];
+
 export const StartScreen: React.FC<StartScreenProps> = ({
   onStartGame,
   isMobileDevice,
   setIsMobileDevice,
 }) => {
   const [selectedLevelId, setSelectedLevelId] = useState<number>(1);
+  const [motivationalPhrase] = useState<string>(() => {
+    const randomIndex = Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length);
+    return MOTIVATIONAL_PHRASES[randomIndex];
+  });
 
   const triggerStart = () => {
     // Resume context & start arpeggiated music!
@@ -40,14 +52,38 @@ export const StartScreen: React.FC<StartScreenProps> = ({
       <div className="absolute top-20 left-10 w-32 h-32 bg-white/5 blur-[80px] rounded-full pointer-events-none z-0" />
       <div className="absolute top-45 right-20 w-64 h-64 bg-yellow-400/[0.03] blur-[100px] rounded-full pointer-events-none z-0" />
 
-      {/* Main Header Title */}
-      <div className="text-center flex flex-col items-center gap-1 z-10">
-        <h1 className="text-6xl md:text-8xl font-black font-display tracking-tighter bg-linear-to-r from-amber-400 via-rose-500 to-emerald-400 bg-clip-text text-transparent drop-shadow-2xl select-none animate-pulse">
-          SUPERMAYC
-        </h1>
-        <p className="text-blue-200 text-xs md:text-sm font-mono font-bold tracking-[0.3em] uppercase opacity-85">
-          ★ ADVENTURE QUEST 100% EDITION ★
-        </p>
+      {/* Main Header with Justin Bieber */}
+      <div className="w-full flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 border-b border-white/5 pb-4 z-10">
+        {/* Justin Bieber Widget (Where highlighted by the user) */}
+        <div className="flex items-center gap-4 bg-slate-950/80 backdrop-blur-md p-3.5 rounded-2xl border-2 border-amber-400 shadow-[0_0_20px_rgba(250,204,21,0.2)] max-w-sm animate-bounce-slow shrink-0">
+          <div className="relative shrink-0">
+            <img
+              src="/src/assets/images/justin_bieber_pixel_art_1782567123144.jpg"
+              alt="Justin Bieber 8-Bit"
+              className="w-16 h-16 rounded-xl border-2 border-white/20 shadow-md object-cover"
+              referrerPolicy="no-referrer"
+            />
+            <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md tracking-wider">
+              JB 🎤
+            </span>
+          </div>
+          <div className="text-left font-sans">
+            <p className="text-[10px] uppercase tracking-wider text-amber-400 font-black leading-none">Bieber Motivador</p>
+            <p className="text-white text-xs font-semibold leading-snug mt-1.5 italic font-mono">
+              "{motivationalPhrase}"
+            </p>
+          </div>
+        </div>
+
+        {/* Main Header Title */}
+        <div className="text-center md:text-left flex flex-col gap-1">
+          <h1 className="text-6xl md:text-7xl lg:text-8xl font-black font-display tracking-tighter bg-linear-to-r from-amber-400 via-rose-500 to-emerald-400 bg-clip-text text-transparent drop-shadow-2xl select-none animate-pulse">
+            SUPERMAYC
+          </h1>
+          <p className="text-blue-200 text-xs md:text-sm font-mono font-bold tracking-[0.3em] uppercase opacity-85">
+            ★ ADVENTURE QUEST 100% EDITION ★
+          </p>
+        </div>
       </div>
 
       {/* Grid: Level Selection & Retro Manual */}

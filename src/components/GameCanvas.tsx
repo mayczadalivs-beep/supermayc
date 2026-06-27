@@ -1820,7 +1820,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full h-full justify-between items-center bg-slate-900 rounded-2xl relative overflow-hidden" id="canvasFrame">
+    <div className={`flex flex-col w-full h-full ${isMobileDevice ? "justify-center" : "justify-between"} items-center bg-black relative overflow-hidden`} id="canvasFrame">
       
       {/* BOSS HEALTH BAR */}
       {bossHealth !== null && (
@@ -1838,17 +1838,13 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       )}
 
       {/* CANVAS VIEWPORT */}
-      <div className="relative w-full h-full flex justify-center items-center bg-sky-300 overflow-hidden">
+      <div className="relative w-full h-full flex justify-center items-center bg-black overflow-hidden">
         <canvas
           ref={canvasRef}
           width={VIEWPORT_WIDTH}
           height={VIEWPORT_HEIGHT}
-          className="max-w-full block shadow-2xl brightness-105"
+          className="w-full h-full block brightness-105"
           style={{
-            width: "100%",
-            height: "auto",
-            aspectRatio: "1200 / 480",
-            maxHeight: "100%",
             objectFit: "contain",
             imageRendering: "pixelated"
           }}
@@ -1856,40 +1852,42 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       </div>
 
       {/* FOOTER GAMEPLAY CONTROL PANELS (MUTE, PAUSE, TIPS) */}
-      <div className="w-full bg-slate-800 border-t-2 border-slate-700 flex justify-between items-center px-6 py-3 shrink-0 gap-4">
-        
-        {/* Keys Cue */}
-        <div className="hidden md:flex items-center gap-3 text-slate-300 text-xs font-mono">
-          <span className="bg-slate-700 text-white px-2 py-1 rounded select-none">A/S/D/W</span>
-          <span>ou</span>
-          <span className="bg-slate-700 text-white px-2 py-1 rounded select-none">←/↓/→/↑</span>
-          <span>Andar/Pular/Abaixar</span>
-          <span className="text-emerald-400">|</span>
-          <span className="bg-orange-600 text-white px-2 py-1 rounded select-none">E</span>
-          <span>Atacar (Gasta 5🪙 sem Flor/Grátis com 🌹)</span>
-        </div>
+      {!isMobileDevice && (
+        <div className="w-full bg-slate-800 border-t-2 border-slate-700 flex justify-between items-center px-6 py-3 shrink-0 gap-4">
+          
+          {/* Keys Cue */}
+          <div className="hidden md:flex items-center gap-3 text-slate-300 text-xs font-mono">
+            <span className="bg-slate-700 text-white px-2 py-1 rounded select-none">A/S/D/W</span>
+            <span>ou</span>
+            <span className="bg-slate-700 text-white px-2 py-1 rounded select-none">←/↓/→/↑</span>
+            <span>Andar/Pular/Abaixar</span>
+            <span className="text-emerald-400">|</span>
+            <span className="bg-orange-600 text-white px-2 py-1 rounded select-none">E</span>
+            <span>Atacar (Gasta 5🪙 sem Flor/Grátis com 🌹)</span>
+          </div>
 
-        {/* Buttons Controls Panels */}
-        <div className="flex items-center gap-2">
-          {/* Mute Toggle */}
-          <button
-            onClick={toggleMute}
-            className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors cursor-pointer"
-            title="Ativar/Desativar Música"
-          >
-            {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5 text-emerald-400" />}
-          </button>
+          {/* Buttons Controls Panels */}
+          <div className="flex items-center gap-2">
+            {/* Mute Toggle */}
+            <button
+              onClick={toggleMute}
+              className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors cursor-pointer"
+              title="Ativar/Desativar Música"
+            >
+              {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5 text-emerald-400" />}
+            </button>
 
-          {/* Level restart */}
-          <button
-            onClick={handleLevelRestart}
-            className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors cursor-pointer"
-            title="Reiniciar Servidor / Fase"
-          >
-            <RotateCcw className="w-5 h-5" />
-          </button>
+            {/* Level restart */}
+            <button
+              onClick={handleLevelRestart}
+              className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors cursor-pointer"
+              title="Reiniciar Servidor / Fase"
+            >
+              <RotateCcw className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
