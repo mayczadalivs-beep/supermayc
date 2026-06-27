@@ -31,9 +31,13 @@ export default function App() {
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.warn("Fullscreen permission or support error:", err);
-      });
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.warn("Fullscreen permission or support error:", err);
+        });
+      } else {
+        console.warn("Fullscreen API not supported in this browser environment.");
+      }
     } else {
       if (document.exitFullscreen) {
         document.exitFullscreen();
@@ -83,9 +87,11 @@ export default function App() {
   const handleStartGame = (levelId: number) => {
     // Attempt auto-fullscreen on start for mobile devices
     if (isMobileDevice && !document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.warn("Auto-fullscreen failed or blocked by sandbox:", err);
-      });
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.warn("Auto-fullscreen failed or blocked by sandbox:", err);
+        });
+      }
     }
     setCurrentLevelId(levelId);
     setCoins(0);

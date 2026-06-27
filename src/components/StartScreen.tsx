@@ -23,7 +23,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
     
     // Request fullscreen on mobile as direct response to click
     if (isMobileDevice) {
-      if (!document.fullscreenElement) {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch((err) => {
           console.warn("Fullscreen request failed inside click handler:", err);
         });
