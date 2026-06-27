@@ -3,6 +3,8 @@ import { GameState, LevelConfig } from "../types";
 import { LEVELS } from "../utils/levels";
 import { Play, Flame, Shield, HelpCircle, Gamepad2, Monitor, Smartphone } from "lucide-react";
 import { audio } from "../utils/audio";
+// @ts-ignore
+import justinBieberImg from "../assets/images/justin_bieber_pixel_art_1782567123144.jpg";
 
 interface StartScreenProps {
   onStartGame: (levelId: number) => void;
@@ -55,20 +57,20 @@ export const StartScreen: React.FC<StartScreenProps> = ({
       {/* Main Header with Justin Bieber */}
       <div className="w-full flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 border-b border-white/5 pb-4 z-10">
         {/* Justin Bieber Widget (Where highlighted by the user) */}
-        <div className="flex items-center gap-4 bg-slate-950/80 backdrop-blur-md p-3.5 rounded-2xl border-2 border-amber-400 shadow-[0_0_20px_rgba(250,204,21,0.2)] max-w-sm animate-bounce-slow shrink-0">
+        <div className="flex items-center gap-4 bg-slate-950/85 backdrop-blur-md p-3 rounded-2xl border-2 border-amber-400 shadow-[0_0_20px_rgba(250,204,21,0.25)] max-w-sm animate-bounce-slow shrink-0">
           <div className="relative shrink-0">
             <img
-              src="/src/assets/images/justin_bieber_pixel_art_1782567123144.jpg"
-              alt="Justin Bieber 8-Bit"
-              className="w-16 h-16 rounded-xl border-2 border-white/20 shadow-md object-cover"
+              src={justinBieberImg}
+              alt="Maycon Bieber 8-Bit"
+              className="w-16 h-16 rounded-xl border-2 border-white/30 shadow-md object-cover"
               referrerPolicy="no-referrer"
             />
-            <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md tracking-wider">
-              JB 🎤
+            <span className="absolute -top-1.5 -right-1.5 bg-amber-400 text-slate-950 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md tracking-wider shadow-sm">
+              MAYCON 🎤
             </span>
           </div>
           <div className="text-left font-sans">
-            <p className="text-[10px] uppercase tracking-wider text-amber-400 font-black leading-none">Bieber Motivador</p>
+            <p className="text-[11px] uppercase tracking-wider text-amber-400 font-black leading-none">Maycon Bieber</p>
             <p className="text-white text-xs font-semibold leading-snug mt-1.5 italic font-mono">
               "{motivationalPhrase}"
             </p>
