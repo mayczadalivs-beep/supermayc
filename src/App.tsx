@@ -6,6 +6,7 @@ import { GameControls } from "./components/GameControls";
 import { audio } from "./utils/audio";
 import { LEVELS } from "./utils/levels";
 import { Trophy, HelpCircle, Gamepad2, Volume2, VolumeX, Sparkles, AlertTriangle, RefreshCw, Maximize2, Minimize2, RotateCcw } from "lucide-react";
+import { checkIsHighScore, saveHighScore } from "./utils/highscores";
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>(GameState.START_SCREEN);
@@ -72,6 +73,12 @@ export default function App() {
     levelName: string;
   } | null>(null);
 
+  // High score entry states
+  const [playerName, setPlayerName] = useState<string>("Maycon Bieber");
+  const [isHighScoreFormVisible, setIsHighScoreFormVisible] = useState<boolean>(false);
+  const [hasSavedHighScore, setHasSavedHighScore] = useState<boolean>(false);
+  const [selectedSkin, setSelectedSkin] = useState<string>("classic");
+
   // Trigger re-creation of level
   const [resetTrigger, setResetTrigger] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>(() => audio.getMutedState());
@@ -111,6 +118,8 @@ export default function App() {
     setPower(PowerState.NORMAL);
     setVictoryStats(null);
     setGameOverStats(null);
+    setIsHighScoreFormVisible(false);
+    setHasSavedHighScore(false);
     setGameState(GameState.PLAYING);
     setResetTrigger((prev) => prev + 1);
   };
@@ -124,6 +133,11 @@ export default function App() {
     setGameOverStats(stats);
     setGameState(GameState.GAME_OVER);
     audio.stopMusic();
+    
+    if (checkIsHighScore(score)) {
+      setIsHighScoreFormVisible(true);
+      setHasSavedHighScore(false);
+    }
   };
 
   const handleLevelCompletedTrigger = (stats: {
@@ -135,6 +149,11 @@ export default function App() {
     setVictoryStats(stats);
     setGameState(GameState.VICTORY);
     audio.stopMusic();
+
+    if (checkIsHighScore(score)) {
+      setIsHighScoreFormVisible(true);
+      setHasSavedHighScore(false);
+    }
   };
 
   const handleRetrySameLevel = () => {
@@ -246,6 +265,8 @@ export default function App() {
             onStartGame={handleStartGame}
             isMobileDevice={isMobileDevice}
             setIsMobileDevice={setIsMobileDevice}
+            selectedSkin={selectedSkin}
+            setSelectedSkin={setSelectedSkin}
           />
         ) : (
           <div className={
@@ -333,6 +354,7 @@ export default function App() {
                 onGameOver={handleGameOverTrigger}
                 resetTrigger={resetTrigger}
                 isMobileDevice={isMobileDevice}
+                selectedSkin={selectedSkin}
               />
             </div>
 
@@ -365,7 +387,7 @@ export default function App() {
 
                   {/* Custom Score logs */}
                   <div className={`w-full bg-slate-950/80 rounded-2xl font-mono text-xs flex flex-col text-slate-300 border border-indigo-800 ${
-                    isMobileDevice ? "p-2.5 gap-1.5 mb-4 text-[10px]" : "p-4 gap-3 mb-8"
+                    isMobileDevice ? "p-2.5 gap-1.5 mb-3 text-[10px]" : "p-4 gap-3 mb-6"
                   }`}>
                     <div className="flex justify-between border-b border-indigo-950 pb-1">
                        <span>Moedas Coletadas:</span>
@@ -380,6 +402,41 @@ export default function App() {
                        <span className="text-white font-black">{score.toLocaleString()} PTS</span>
                     </div>
                   </div>
+
+                  {/* High Score Form */}
+                  {isHighScoreFormVisible && !hasSavedHighScore && (
+                    <div className="w-full bg-slate-900/90 border border-amber-400 p-3.5 rounded-2xl mb-4 font-sans text-left">
+                      <p className="text-[10px] uppercase font-black text-amber-400 flex items-center gap-1.5 mb-2">
+                        <Trophy className="w-3.5 h-3.5 animate-bounce" />
+                        Novo Recorde de Todos os Tempos!
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={playerName}
+                          onChange={(e) => setPlayerName(e.target.value)}
+                          maxLength={15}
+                          placeholder="Seu Nome"
+                          className="flex-1 px-3 py-1.5 rounded-xl bg-black border border-white/20 text-white font-bold text-xs focus:outline-none focus:border-amber-400"
+                        />
+                        <button
+                          onClick={() => {
+                            saveHighScore(playerName, score, coins, victoryStats?.levelName || "Mundo");
+                            setHasSavedHighScore(true);
+                            setIsHighScoreFormVisible(false);
+                          }}
+                          className="px-4 py-1.5 bg-amber-400 hover:bg-amber-300 rounded-xl text-slate-950 font-black text-xs cursor-pointer shadow-md transition-all"
+                        >
+                          SALVAR
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {hasSavedHighScore && (
+                    <div className="w-full bg-emerald-950/40 border border-emerald-500/30 p-2.5 rounded-xl mb-4 text-[10px] font-bold text-emerald-400 font-mono">
+                      ✓ Recorde registrado com sucesso!
+                    </div>
+                  )}
 
                   {/* Modal Buttons panel */}
                   <div className={`flex w-full ${isMobileDevice ? "flex-row gap-2" : "flex-col gap-3"}`}>
@@ -426,7 +483,7 @@ export default function App() {
 
                   {/* Custom Defeat Score logs */}
                   <div className={`w-full bg-slate-950/80 rounded-2xl font-mono text-xs flex flex-col text-slate-300 border border-red-950 ${
-                    isMobileDevice ? "p-2.5 gap-1.5 mb-4 text-[10px]" : "p-4 gap-2 mb-8"
+                    isMobileDevice ? "p-2.5 gap-1.5 mb-3 text-[10px]" : "p-4 gap-2 mb-6"
                   }`}>
                     <div className="flex justify-between">
                       <span>Parou no Mundo:</span>
@@ -437,6 +494,41 @@ export default function App() {
                       <span className="text-amber-400 font-bold">{gameOverStats.coins} 🪙</span>
                     </div>
                   </div>
+
+                  {/* High Score Form */}
+                  {isHighScoreFormVisible && !hasSavedHighScore && (
+                    <div className="w-full bg-slate-900/90 border border-amber-400 p-3.5 rounded-2xl mb-4 font-sans text-left">
+                      <p className="text-[10px] uppercase font-black text-amber-400 flex items-center gap-1.5 mb-2">
+                        <Trophy className="w-3.5 h-3.5 animate-bounce" />
+                        Novo Recorde de Todos os Tempos!
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={playerName}
+                          onChange={(e) => setPlayerName(e.target.value)}
+                          maxLength={15}
+                          placeholder="Seu Nome"
+                          className="flex-1 px-3 py-1.5 rounded-xl bg-black border border-white/20 text-white font-bold text-xs focus:outline-none focus:border-amber-400"
+                        />
+                        <button
+                          onClick={() => {
+                            saveHighScore(playerName, score, coins, gameOverStats?.levelName || "Mundo");
+                            setHasSavedHighScore(true);
+                            setIsHighScoreFormVisible(false);
+                          }}
+                          className="px-4 py-1.5 bg-amber-400 hover:bg-amber-300 rounded-xl text-slate-950 font-black text-xs cursor-pointer shadow-md transition-all"
+                        >
+                          SALVAR
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {hasSavedHighScore && (
+                    <div className="w-full bg-emerald-950/40 border border-emerald-500/30 p-2.5 rounded-xl mb-4 text-[10px] font-bold text-emerald-400 font-mono">
+                      ✓ Recorde registrado com sucesso!
+                    </div>
+                  )}
 
                   {/* Defeat retry panel */}
                   <div className={`flex w-full ${isMobileDevice ? "flex-row gap-2" : "flex-col gap-3"}`}>
@@ -461,13 +553,7 @@ export default function App() {
         )}
       </main>
 
-      {/* FOOTER MANIFEST RULES AND CREDIT RAIL */}
-      {gameState === GameState.START_SCREEN && (
-        <footer className="relative z-10 w-full text-center py-6 text-[11px] font-mono text-slate-500 mt-6 select-none border-t border-white/5">
-          <p>SUPERMAYC Platforms Inc - 100% Melhorado e Inspirado pelo Clássico Super Mario Bros.</p>
-          <p className="mt-1 opacity-75">Sabor Imersivo | TypeScript, Web Audio real-time Synthesizer & Canvas Engine de Alta Performance</p>
-        </footer>
-      )}
+
     </div>
   );
 }

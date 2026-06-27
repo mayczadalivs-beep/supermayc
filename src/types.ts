@@ -123,3 +123,13 @@ export interface LevelConfig {
   gravity: number;
   musicTempo: number;
 }
+
+export interface HighScoreEntry {
+  id: string;
+  name: string;
+  score: number;
+  coins: number;
+  levelName: string;
+  date: string;
+}
+

@@ -26,6 +26,7 @@ interface GameCanvasProps {
   onGameOver: (stats: { coins: number; levelName: string }) => void;
   resetTrigger: number;
   isMobileDevice?: boolean;
+  selectedSkin?: string;
 }
 
 const TILE_SIZE = 32;
@@ -42,7 +43,8 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   onVictory,
   onGameOver,
   resetTrigger,
-  isMobileDevice
+  isMobileDevice,
+  selectedSkin = "classic"
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -1735,9 +1737,28 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
       // Invulnerable rainbow Star effect blinking colors
       const starActive = player.starTimer > 0;
+      // Determine skin custom colors
+      let capShirtColor = "#dc2626"; // default classic red
+      let overallsColor = "#15803d"; // default classic green overalls
+
+      if (selectedSkin === "bieber") {
+        capShirtColor = player.powerState === PowerState.FIRE ? "#ffffff" : "#fbbf24"; // golden cap
+        overallsColor = "#7e22ce"; // purple overalls
+      } else if (selectedSkin === "fire") {
+        capShirtColor = "#ffffff"; // white cap/shirt
+        overallsColor = "#dc2626"; // red overalls
+      } else if (selectedSkin === "shadow") {
+        capShirtColor = player.powerState === PowerState.FIRE ? "#ef4444" : "#1e293b"; // dark slate cap
+        overallsColor = "#22c55e"; // neon green overalls
+      } else {
+        // classic
+        capShirtColor = player.powerState === PowerState.FIRE ? "#ffffff" : "#dc2626";
+        overallsColor = "#15803d";
+      }
+
       const shadowColor = starActive
         ? `hsl(${(frameCountRef.current * 15) % 360}, 100%, 65%)`
-        : (player.powerState === PowerState.FIRE ? "#ef4444" : "#2563eb");
+        : (player.powerState === PowerState.FIRE ? "#ef4444" : (selectedSkin === "bieber" ? "#fbbf24" : (selectedSkin === "shadow" ? "#22c55e" : "#2563eb")));
 
       // Draw shadow trail if star is pulsing
       if (starActive && frameCountRef.current % 3 === 0) {
@@ -1754,8 +1775,35 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         });
       }
 
+      // Add custom trails when player is running/walking
+      if (player.isWalking && player.grounded && frameCountRef.current % 5 === 0) {
+        let trailColor = "rgba(255, 255, 255, 0.4)";
+        let trailSize = 3;
+        if (selectedSkin === "bieber") {
+          trailColor = `rgba(250, 204, 21, ${0.4 + Math.random() * 0.4})`; // Golden sparks!
+          trailSize = 4;
+        } else if (selectedSkin === "fire") {
+          trailColor = `rgba(239, 68, 68, ${0.4 + Math.random() * 0.4})`; // Fire sparks!
+          trailSize = 4;
+        } else if (selectedSkin === "shadow") {
+          trailColor = `rgba(34, 197, 94, ${0.4 + Math.random() * 0.4})`; // Neon green sparks!
+          trailSize = 3.5;
+        }
+        particles.push({
+          id: `skin-trail-${frameCountRef.current}`,
+          x: player.facing === "right" ? player.x - 2 : player.x + player.width + 2,
+          y: player.y + player.height - 6,
+          vx: (player.facing === "right" ? -1 : 1) * (1 + Math.random() * 1.5),
+          vy: -Math.random() * 0.5,
+          color: trailColor,
+          size: trailSize,
+          alpha: 0.8,
+          decay: 0.08
+        });
+      }
+
       // CAP / HAT (Red signature custom cap)
-      ctx.fillStyle = player.powerState === PowerState.FIRE ? "#ffffff" : "#dc2626"; // white cap if fire
+      ctx.fillStyle = capShirtColor;
       ctx.fillRect(pX + 2, pY, player.width - 4, 6);
       // cap brim visor
       ctx.fillRect(pX + (player.facing === "right" ? 6 : -4), pY + 2, player.width - 2, 3);
@@ -1775,11 +1823,11 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       }
 
       // RETRO SHIRT (Red)
-      ctx.fillStyle = player.powerState === PowerState.FIRE ? "#ffffff" : "#dc2626";
+      ctx.fillStyle = capShirtColor;
       ctx.fillRect(pX + 4, pY + 16, player.width - 8, player.height - 24);
 
       // OVERALLS (Mayc Signature Green Overalls!)
-      ctx.fillStyle = "#15803d"; // Dark green overalls
+      ctx.fillStyle = overallsColor;
       ctx.fillRect(pX + 3, pY + 20, player.width - 6, player.height - 24);
       // straps
       ctx.fillRect(pX + 4, pY + 16, 3, 5);
