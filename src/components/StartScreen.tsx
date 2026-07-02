@@ -72,7 +72,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
         {/* Main Header Title */}
         <div className="text-left flex flex-col justify-center">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-black font-display tracking-tighter bg-gradient-to-r from-amber-400 via-rose-500 to-emerald-400 bg-clip-text text-transparent drop-shadow-2xl select-none leading-none">
-            SUPERMAYC
+            SUPER MAYC BROS
           </h1>
           <p className="text-blue-200 text-[9px] md:text-xs font-mono font-bold tracking-[0.25em] uppercase opacity-85 mt-1">
             ★ ADVENTURE QUEST 100% EDITION ★
