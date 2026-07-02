@@ -195,8 +195,8 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     const player = playerRef.current;
     
     // Check if player can throw fireball.
-    // If they have FIRE power, it's free. If normal/super, they can still do it by paying 5 coins!
-    const isFree = player.powerState === PowerState.FIRE;
+    // If they have FIRE power or are playing with Fire Mayc, it's free. Otherwise, they pay 5 coins!
+    const isFree = player.powerState === PowerState.FIRE || selectedSkin === "fire";
     if (!isFree && coinsRef.current < 5) return; // not enough coins
 
     if (!isFree) {
@@ -208,31 +208,95 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
     // Spawn Fireball entity
     const fireSpeed = player.facing === "right" ? 5.5 : -5.5;
-    entitiesRef.current.push({
-      id: `fireball-${frameCountRef.current}`,
-      type: EntityType.FIREBALL,
-      x: player.facing === "right" ? player.x + player.width + 2 : player.x - 12,
-      y: player.y + player.height / 3,
-      vx: fireSpeed,
-      vy: 1.5,
-      width: 12,
-      height: 12,
-      facing: player.facing
-    });
 
-    // Spawn sparks VFX
-    for (let i = 0; i < 5; i++) {
-      particlesRef.current.push({
-        id: `shoot-spark-${frameCountRef.current}-${i}`,
-        x: player.facing === "right" ? player.x + player.width : player.x,
-        y: player.y + player.height / 3 + (Math.random() * 10 - 5),
-        vx: (player.facing === "right" ? 1 : -1) * (1 + Math.random() * 2),
-        vy: Math.random() * 2 - 1,
-        color: "#f97316",
-        size: 3 + Math.random() * 3,
-        alpha: 1,
-        decay: 0.05
+    if (selectedSkin === "fire") {
+      // Triple fireball!
+      [-1.5, 1.5, 4.5].forEach((vYDir, idx) => {
+        entitiesRef.current.push({
+          id: `fireball-${frameCountRef.current}-${idx}`,
+          type: EntityType.FIREBALL,
+          x: player.facing === "right" ? player.x + player.width + 2 : player.x - 12,
+          y: player.y + player.height / 3,
+          vx: fireSpeed,
+          vy: vYDir,
+          width: 12,
+          height: 12,
+          facing: player.facing,
+          color: "fire"
+        });
       });
+
+      // Spawn fiery sparks VFX
+      for (let i = 0; i < 8; i++) {
+        particlesRef.current.push({
+          id: `shoot-spark-fire-${frameCountRef.current}-${i}`,
+          x: player.facing === "right" ? player.x + player.width : player.x,
+          y: player.y + player.height / 3 + (Math.random() * 16 - 8),
+          vx: (player.facing === "right" ? 1 : -1) * (2 + Math.random() * 3),
+          vy: Math.random() * 3 - 1.5,
+          color: "#f97316",
+          size: 4 + Math.random() * 4,
+          alpha: 1,
+          decay: 0.04
+        });
+      }
+    } else if (selectedSkin === "shadow") {
+      // Piercing shadow orb!
+      entitiesRef.current.push({
+        id: `fireball-${frameCountRef.current}`,
+        type: EntityType.FIREBALL,
+        x: player.facing === "right" ? player.x + player.width + 2 : player.x - 12,
+        y: player.y + player.height / 3,
+        vx: fireSpeed * 1.5, // 50% faster shadow orb!
+        vy: 0, // completely straight!
+        width: 16,
+        height: 16,
+        facing: player.facing,
+        color: "shadow"
+      });
+
+      // Spawn neon green sparks VFX
+      for (let i = 0; i < 6; i++) {
+        particlesRef.current.push({
+          id: `shoot-spark-shadow-${frameCountRef.current}-${i}`,
+          x: player.facing === "right" ? player.x + player.width : player.x,
+          y: player.y + player.height / 3 + (Math.random() * 10 - 5),
+          vx: (player.facing === "right" ? 1 : -1) * (2 + Math.random() * 2),
+          vy: Math.random() * 2 - 1,
+          color: "#22c55e",
+          size: 3 + Math.random() * 3,
+          alpha: 1,
+          decay: 0.05
+        });
+      }
+    } else {
+      // Classic single fireball
+      entitiesRef.current.push({
+        id: `fireball-${frameCountRef.current}`,
+        type: EntityType.FIREBALL,
+        x: player.facing === "right" ? player.x + player.width + 2 : player.x - 12,
+        y: player.y + player.height / 3,
+        vx: fireSpeed,
+        vy: 1.5,
+        width: 12,
+        height: 12,
+        facing: player.facing
+      });
+
+      // Spawn standard orange sparks VFX
+      for (let i = 0; i < 5; i++) {
+        particlesRef.current.push({
+          id: `shoot-spark-${frameCountRef.current}-${i}`,
+          x: player.facing === "right" ? player.x + player.width : player.x,
+          y: player.y + player.height / 3 + (Math.random() * 10 - 5),
+          vx: (player.facing === "right" ? 1 : -1) * (1 + Math.random() * 2),
+          vy: Math.random() * 2 - 1,
+          color: "#f97316",
+          size: 3 + Math.random() * 3,
+          alpha: 1,
+          decay: 0.05
+        });
+      }
     }
   };
 
@@ -274,11 +338,24 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     }
 
     // --- 1. KEYBOARD CONTROLS FOR PLAYER ---
-    const speedMultiplier = player.starTimer > 0 ? 1.35 : 1.0;
+    let skinSpeedMult = 1.0;
+    let skinGravityMult = 1.0;
+    let skinJumpForce = -10.2;
+
+    if (selectedSkin === "shadow") {
+      skinSpeedMult = 1.25; // 25% faster!
+      skinGravityMult = 0.82; // falls slightly slower / floats elegantly!
+    } else if (selectedSkin === "fire") {
+      skinSpeedMult = 1.08;
+    } else if (selectedSkin === "bieber") {
+      skinSpeedMult = 1.05;
+    }
+
+    const speedMultiplier = (player.starTimer > 0 ? 1.35 : 1.0) * skinSpeedMult;
     const accel = 0.35 * speedMultiplier;
     const friction = 0.85;
     const maxSpeed = 4.2 * speedMultiplier;
-    const jumpForce = -10.2;
+    const jumpForce = skinJumpForce;
 
     player.isCrouching = keysRef.current["ArrowDown"] || keysRef.current["KeyS"] || false;
 
@@ -334,7 +411,36 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     if (wantsToJump && player.grounded) {
       player.vy = jumpForce;
       player.grounded = false;
+      player.hasDoubleJumped = false;
+      player.jumpReleased = false;
       audio.playJump();
+    }
+
+    if (!wantsToJump) {
+      player.jumpReleased = true;
+    }
+
+    // Mayc Bieber: Double Jump Ability!
+    if (wantsToJump && !player.grounded && selectedSkin === "bieber" && !player.hasDoubleJumped && player.jumpReleased) {
+      player.vy = jumpForce * 0.95;
+      player.hasDoubleJumped = true;
+      player.jumpReleased = false;
+      audio.playCoin(); // Play golden coin pop sound
+      
+      // Spawn magical musical notes & gold particles
+      for (let i = 0; i < 8; i++) {
+        particles.push({
+          id: `note-spark-${frameCountRef.current}-${i}`,
+          x: player.x + player.width / 2,
+          y: player.y + player.height - 4,
+          vx: (Math.random() * 4 - 2),
+          vy: (Math.random() * -2 - 1),
+          color: i % 2 === 0 ? "#e9d5ff" : "#fef08a", // soft purple / gold
+          size: 4 + Math.random() * 4,
+          alpha: 1,
+          decay: 0.05
+        });
+      }
     }
 
     // Apply Player sizes based on state
@@ -346,7 +452,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     }
 
     // Apply Gravity and Physics Limits
-    player.vy += levelConfig.gravity;
+    player.vy += levelConfig.gravity * skinGravityMult;
     if (player.vx > maxSpeed) player.vx = maxSpeed;
     if (player.vx < -maxSpeed) player.vx = -maxSpeed;
     // Terminal velocity
@@ -416,6 +522,33 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       // Update specific entity AI behaviors
       updateEntityAI(entity, player, tiles, entities);
 
+      // Manual movement for fireballs and bowser fireballs (since they are excluded from tile resolution)
+      if (entity.type === EntityType.FIREBALL || entity.type === EntityType.BOWSER_FIRE) {
+        entity.x += entity.vx;
+        entity.y += entity.vy;
+      }
+
+      // Coin magnetism for Mayc Bieber skin
+      if (entity.type === EntityType.COIN && selectedSkin === "bieber") {
+        const dx = player.x + player.width / 2 - (entity.x + 8); // coins are roughly 16x16
+        const dy = player.y + player.height / 2 - (entity.y + 8);
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          const pullForce = 3.8;
+          entity.x += (dx / dist) * pullForce;
+          entity.y += (dy / dist) * pullForce;
+        }
+      }
+
+      // Clean up off-screen fireballs to prevent leaks
+      if (entity.type === EntityType.FIREBALL) {
+        const distFromCam = entity.x - cameraXRef.current;
+        if (distFromCam < -200 || distFromCam > VIEWPORT_WIDTH + 200 || entity.y > VIEWPORT_HEIGHT + 100) {
+          entities.splice(i, 1);
+          continue;
+        }
+      }
+
       // Entity-to-Tile collisions (Movement blocking)
       if (
         entity.type !== EntityType.PIRANHA_PLANT &&
@@ -462,8 +595,25 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
             if (checkAABBCollision(entity, enemy)) {
               // Hurt enemy
               hurtEnemyWithFireball(enemy, entities);
-              hitWall = true;
-              break;
+              if (entity.color !== "shadow") {
+                hitWall = true;
+                break;
+              } else {
+                // Spawn cool green sparks on pierce
+                for (let s = 0; s < 3; s++) {
+                  particles.push({
+                    id: `spark-shadow-pierce-${frameCountRef.current}-${s}-${j}`,
+                    x: enemy.x + 16,
+                    y: enemy.y + 16,
+                    vx: (Math.random() * 4 - 2),
+                    vy: (Math.random() * -3),
+                    color: "#22c55e",
+                    size: 2 + Math.random() * 2,
+                    alpha: 1,
+                    decay: 0.1
+                  });
+                }
+              }
             }
           }
         }
@@ -1696,17 +1846,44 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
 
       // --- 3J. PROJECTILE / FIREBALL ---
       else if (entity.type === EntityType.FIREBALL) {
-        const bouncePulse = (frameCountRef.current * 20) % 360;
-        ctx.fillStyle = `hsl(${bouncePulse}, 95%, 50%)`; // Orange fireball
-        ctx.beginPath();
-        ctx.arc(eX + 6, entity.y + 6, 6, 0, Math.PI * 2);
-        ctx.fill();
+        if (entity.color === "shadow") {
+          // Shadow Orb: Glowing Radiant Green with trail
+          const neonPulse = (frameCountRef.current * 15) % 360;
+          ctx.fillStyle = `hsl(142, 70%, 50%)`; // Rich green
+          ctx.beginPath();
+          ctx.arc(eX + 8, entity.y + 8, 8, 0, Math.PI * 2);
+          ctx.fill();
 
-        // flame tail
-        ctx.fillStyle = "#ef4444";
-        ctx.beginPath();
-        ctx.arc(eX + (entity.facing === "right" ? -4 : 12), entity.y + 6, 3, 0, Math.PI * 2);
-        ctx.fill();
+          ctx.fillStyle = `rgba(34, 197, 94, 0.45)`; // Neon shadow trail
+          ctx.beginPath();
+          ctx.arc(eX + (entity.facing === "right" ? -6 : 22), entity.y + 8, 4, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (entity.color === "fire") {
+          // Hot fiery plasma fireball!
+          const pulse = (frameCountRef.current * 25) % 360;
+          ctx.fillStyle = `hsl(${pulse}, 100%, 55%)`; // Hot fire colors
+          ctx.beginPath();
+          ctx.arc(eX + 6, entity.y + 6, 6, 0, Math.PI * 2);
+          ctx.fill();
+          
+          ctx.fillStyle = "#f97316";
+          ctx.beginPath();
+          ctx.arc(eX + (entity.facing === "right" ? -4 : 12), entity.y + 6, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Classic Fireball
+          const bouncePulse = (frameCountRef.current * 20) % 360;
+          ctx.fillStyle = `hsl(${bouncePulse}, 95%, 50%)`; // Orange fireball
+          ctx.beginPath();
+          ctx.arc(eX + 6, entity.y + 6, 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          // flame tail
+          ctx.fillStyle = "#ef4444";
+          ctx.beginPath();
+          ctx.arc(eX + (entity.facing === "right" ? -4 : 12), entity.y + 6, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       // --- 3K. BOWSER FIREBALL (LARGE WAVY) ---

@@ -66,6 +66,8 @@ export interface Player {
   isCrouching: boolean;
   isWalking: boolean;
   walkFrame: number;
+  hasDoubleJumped?: boolean;
+  jumpReleased?: boolean;
 }
 
 export interface GameEntity {

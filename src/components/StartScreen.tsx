@@ -24,10 +24,10 @@ const MOTIVATIONAL_PHRASES = [
 ];
 
 const SKINS = [
-  { id: "classic", name: "Classic Mayc", desc: "Encanador Herói", cap: "#dc2626", overalls: "#15803d", badge: "❤️" },
-  { id: "bieber", name: "Mayc Bieber", desc: "Visual Astro Pop", cap: "#fbbf24", overalls: "#7e22ce", badge: "🎤" },
-  { id: "fire", name: "Fire Mayc", desc: "Poder Flamejante", cap: "#ffffff", overalls: "#dc2626", badge: "🔥" },
-  { id: "shadow", name: "Shadow Mayc", desc: "Ninja das Sombras", cap: "#1e293b", overalls: "#22c55e", badge: "👤" },
+  { id: "classic", name: "Classic Mayc", desc: "Encanador Herói", ability: "Equilibrado ★", cap: "#dc2626", overalls: "#15803d", badge: "❤️" },
+  { id: "bieber", name: "Mayc Bieber", desc: "Visual Astro Pop", ability: "Pulo Duplo & Ímã de Moeda 🎤", cap: "#fbbf24", overalls: "#7e22ce", badge: "🎤" },
+  { id: "fire", name: "Fire Mayc", desc: "Poder Flamejante", ability: "Tiro Triplo Grátis 🔥", cap: "#ffffff", overalls: "#dc2626", badge: "🔥" },
+  { id: "shadow", name: "Shadow Mayc", desc: "Ninja das Sombras", ability: "Veloz & Tiro Penetrante 👤⚡", cap: "#1e293b", overalls: "#22c55e", badge: "👤" },
 ];
 
 export const StartScreen: React.FC<StartScreenProps> = ({
@@ -135,11 +135,12 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                       <div className="w-1/2 h-full" style={{ backgroundColor: skin.overalls }} />
                       <span className="absolute inset-0 flex items-center justify-center text-[9px]">{skin.badge}</span>
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className={`text-[11px] font-black truncate leading-tight ${isSkinSelected ? "text-amber-400" : "text-slate-200"}`}>
                         {skin.name}
                       </div>
                       <div className="text-[8.5px] text-slate-400 leading-none truncate">{skin.desc}</div>
+                      <div className="text-[7.5px] text-amber-300 font-bold leading-none mt-0.5 truncate">{skin.ability}</div>
                     </div>
                   </button>
                 );
